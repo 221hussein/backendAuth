@@ -6,6 +6,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import javax.swing.plaf.IconUIResource;
 import java.util.Objects;
 
 @RestController
@@ -41,9 +44,16 @@ public class AuthController {
     }
     record LoginResponse(String token){}
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest loginRequest) {
-        var token = authService.login(loginRequest.email() ,loginRequest.password());
+    public LoginResponse login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+        var login = authService.login(loginRequest.email() ,loginRequest.password());
 
-        return new LoginResponse(token.getToken());
+        Cookie cookie = new Cookie("refresh_token",login.getRefreshToken().getToken());
+        cookie.setMaxAge(3600);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/api");
+
+        response.addCookie(cookie);
+
+        return new LoginResponse(login.getAccessToken().getToken());
     }
 }
