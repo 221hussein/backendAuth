@@ -12,20 +12,16 @@ import java.util.Objects;
 @RequestMapping(value = "/api")
 public class AuthController {
 
-
     private final AuthService authService;
 
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
 
-
     record RegisterRequest(String firstName, String lastName, String email, String password, String passwordConfirm){}
     record RegisterResponse(Long id,String firstName,String lastName,String email){
 
     }
-
-
 
     @PostMapping("/register")
     public RegisterResponse register(@RequestBody RegisterRequest registerRequest) {
