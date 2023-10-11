@@ -18,6 +18,7 @@ public class User {
     private String email;
     private String password;
 
+    //factory Pattern
     public static User of(String firstName, String lastName, String email, String password) {
         return new User(null,firstName,lastName,email,password);
     }

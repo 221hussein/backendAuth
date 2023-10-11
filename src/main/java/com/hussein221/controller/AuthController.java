@@ -20,8 +20,21 @@ public class AuthController {
         return "hello";
     }
 
+
+
+    record RegisterRequest(String firstName, String lastName,
+                           String email, String password, String passwordConfirm){ }
+    record RegisterResponse(Long id,String firstName,String lastName,String email){}
+
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
-        return userRepository.save(user);
+    public RegisterResponse register(@RequestBody RegisterRequest registerRequest) {
+        var user = userRepository.save(
+                User.of(registerRequest.firstName(),
+                        registerRequest.lastName(),
+                        registerRequest.email(),
+                        registerRequest.password())
+        );
+
+        return new RegisterResponse(user.getId(),user.getFirstName(),user.getLastName(),user.getEmail());
     }
 }
