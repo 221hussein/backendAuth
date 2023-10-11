@@ -64,4 +64,11 @@ public class AuthController {
         var user = (User) request.getAttribute("user");
         return new UserResponse(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail());
     }
+
+    record RefreshResponse(String message) {}
+
+    @PostMapping("/refresh")
+    public RefreshResponse refresh (@CookieValue("refresh_token")String refreshToken ) {
+        return new RefreshResponse(authService.refreshAccess(refreshToken).getAccessToken().getToken());
+    }
 }
