@@ -33,5 +33,5 @@ build/
 .vscode/
 
 auth_db.lock.db
-
 auth_db.mv.db
+auth_db.trace.db

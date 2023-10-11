@@ -1,7 +1,11 @@
 package com.hussein221.service;
 
+import com.hussein221.exceptions.EmailAlreadyExistsError;
+import com.hussein221.exceptions.InvalidCredentialsError;
+import com.hussein221.exceptions.PasswordDontMatchError;
 import com.hussein221.model.User;
 import com.hussein221.repository.UserRepository;
+import org.springframework.data.relational.core.conversion.DbActionExecutionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,23 +30,28 @@ public class AuthService {
 
 
         if(!Objects.equals(password, passwordConfirm))
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"password do not match");
-
-        return userRepository.save(
-                User.of(firstName,lastName,email, passwordEncoder.encode(password))
-        );
+            throw new PasswordDontMatchError();
+        User user;
+        try {
+            user  = userRepository.save(
+                    User.of(firstName,lastName,email, passwordEncoder.encode(password))
+            );
+        }catch (DbActionExecutionException exception){
+            throw new EmailAlreadyExistsError();
+        }
+        return user;
     }
 
-    public User login(String email, String password) {
+    public Token login(String email, String password) {
         // find user by email
         var user = userRepository.findByEmail(email).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST,"invalid Credential")
+                InvalidCredentialsError::new
         );
 
         //see if password don't match
         if (!passwordEncoder.matches(password, user.getPassword())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"invalid credentials");
+            throw new InvalidCredentialsError();
         }
-        return user;
+        return Token.of(user.getId(), 10L ,"very_long_and_secure_and_safe_access_key");
     }
 }

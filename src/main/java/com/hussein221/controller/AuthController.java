@@ -2,7 +2,6 @@ package com.hussein221.controller;
 
 import com.hussein221.model.User;
 import com.hussein221.service.AuthService;
-import lombok.var;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -40,11 +39,11 @@ public class AuthController {
     record LoginRequest(String email, String password) {
 
     }
-    record LoginResponse(Long id,String firstName,String lastName,String email){}
+    record LoginResponse(String token){}
     @PostMapping("/login")
     public LoginResponse login(@RequestBody LoginRequest loginRequest) {
-        var user = authService.login(loginRequest.email() ,loginRequest.password());
+        var token = authService.login(loginRequest.email() ,loginRequest.password());
 
-        return new LoginResponse(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail() );
+        return new LoginResponse(token.getToken());
     }
 }
