@@ -3,6 +3,7 @@ package com.hussein221.service;
 import com.hussein221.exceptions.EmailAlreadyExistsError;
 import com.hussein221.exceptions.InvalidCredentialsError;
 import com.hussein221.exceptions.PasswordDontMatchError;
+import com.hussein221.exceptions.UserNotFoundError;
 import com.hussein221.model.User;
 import com.hussein221.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,5 +57,10 @@ public class AuthService {
             throw new InvalidCredentialsError();
         }
         return Login.of(user.getId(), accessTokenSecret,refreshTokenSecret);
+    }
+
+    public User getUserFromToken(String token) {
+        return userRepository.findById(Token.from(token, accessTokenSecret))
+                .orElseThrow(UserNotFoundError:: new);
     }
 }
