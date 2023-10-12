@@ -1,9 +1,7 @@
 package com.hussein221.service;
 
-import com.hussein221.exceptions.EmailAlreadyExistsError;
-import com.hussein221.exceptions.InvalidCredentialsError;
-import com.hussein221.exceptions.PasswordDontMatchError;
-import com.hussein221.exceptions.UserNotFoundError;
+import com.hussein221.exceptions.*;
+import com.hussein221.model.Token;
 import com.hussein221.model.User;
 import com.hussein221.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -56,7 +54,13 @@ public class AuthService {
         if (!passwordEncoder.matches(password, user.getPassword())){
             throw new InvalidCredentialsError();
         }
-        return Login.of(user.getId(), accessTokenSecret,refreshTokenSecret);
+        var login = Login.of(user.getId(), accessTokenSecret,refreshTokenSecret);
+        var refreshJwt = login.getRefreshToken();
+
+        user.addToken(new Token(refreshJwt.getToken(), refreshJwt.getIssuedAt() ,refreshJwt.getExpiration()));
+        userRepository.save(user);
+
+        return login;
     }
 
     public User getUserFromToken(String token) {
@@ -67,6 +71,24 @@ public class AuthService {
     public Login refreshAccess(String refreshToken) {
         var refreshJwt = Jwt.from(refreshToken, refreshTokenSecret);
 
+        var user = userRepository.findByIdAndTokensRefreshTokenAndTokensExpiratedAtGreaterThan(
+                refreshJwt.getUserId(),refreshJwt.getToken(), refreshJwt.getExpiration())
+                .orElseThrow(UnauthenticatedError::new);
         return Login.of(refreshJwt.getUserId(), accessTokenSecret , refreshJwt);
+    }
+
+    public Boolean logout(String refreshToken) {
+        var refreshJwt = Jwt.from(refreshToken, refreshTokenSecret);
+
+        var user = userRepository.findById(refreshJwt.getUserId())
+                .orElseThrow(UnauthenticatedError::new);
+
+        var tokenIsRemoved = user.removeTokenIf(token -> Objects.equals(token.refreshToken(),
+                refreshToken));
+        if (tokenIsRemoved) {
+            userRepository.save(user);
+        }
+
+        return tokenIsRemoved;
     }
 }
