@@ -23,3 +23,10 @@ create table if not exists token (
     user            BIGINT          not null,
     constraint fk_token_user foreign key (user) references user (id)
 );
+
+create table if not exists password_recovery (
+    id          identity not null,
+    token varchar(255) not null,
+    user            BIGINT          not null,
+    constraint fk_password_recovery foreign key (user) references user (id)
+)
