@@ -1,6 +1,7 @@
 package com.hussein221.service;
 
 import com.hussein221.exceptions.*;
+import com.hussein221.model.PasswordRecovery;
 import com.hussein221.model.Token;
 import com.hussein221.model.User;
 import com.hussein221.repository.UserRepository;
@@ -10,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 public class AuthService {
@@ -17,14 +19,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final String accessTokenSecret;
     private final String refreshTokenSecret;
+    private final MailService mailService;
 
     public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository,
                        @Value("${application.security.access-token-secret}") String accessTokenSecret,
-                       @Value("${application.security.refresh-token-secret}")String refreshTokenSecret) {
+                       @Value("${application.security.refresh-token-secret}")String refreshTokenSecret, MailService mailService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.accessTokenSecret = accessTokenSecret;
         this.refreshTokenSecret = refreshTokenSecret;
+        this.mailService = mailService;
     }
 
 
@@ -90,5 +94,15 @@ public class AuthService {
         }
 
         return tokenIsRemoved;
+    }
+
+    public void forgot(String email, String originUrl) {
+        var token = UUID.randomUUID().toString().replace("-","");
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundError::new);
+        user.addPasswordRecovery(new PasswordRecovery(token));
+        mailService.senForgotMessage(email, token, originUrl);
+
+        userRepository.save(user);
     }
 }
