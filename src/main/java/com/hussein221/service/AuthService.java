@@ -60,13 +60,13 @@ public class AuthService {
     }
 
     public User getUserFromToken(String token) {
-        return userRepository.findById(Token.from(token, accessTokenSecret))
+        return userRepository.findById(Jwt.from(token, accessTokenSecret).getUserId())
                 .orElseThrow(UserNotFoundError:: new);
     }
 
     public Login refreshAccess(String refreshToken) {
-        var userId = Token.from(refreshToken, refreshTokenSecret);
+        var refreshJwt = Jwt.from(refreshToken, refreshTokenSecret);
 
-        return Login.of(userId, accessTokenSecret ,Token.of(refreshToken));
+        return Login.of(refreshJwt.getUserId(), accessTokenSecret , refreshJwt);
     }
 }
