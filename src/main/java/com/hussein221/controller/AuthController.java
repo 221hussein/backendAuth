@@ -14,6 +14,7 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping(value = "/api")
+
 public class AuthController {
 
     private final AuthService authService;
